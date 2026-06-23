@@ -3,3 +3,4 @@ gunicorn
 pillow
 pymysql
 django-cors-headers
+whitenoise
