@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block main %}
+<div class="order-container">
+    <h2 class="order-title">订单确认</h2>
+
+    {% if sumlist %}
+    <!-- 收货地址模块 -->
+    <div class="address-section">
+        <h3 class="address-title">收货地址</h3>
+        <div class="address-list">
+            {% for address in address_list %}
+            <div class="address-card {% if address.is_default %}active{% endif %}" data-address-id="{{ address.id }}">
+                <div class="address-radio">
+                    <input type="radio" name="address_id" id="address{{ address.id }}"
+                           value="{{ address.id }}" {% if address.is_default %}checked{% endif %}>
+                    <label for="address{{ address.id }}"></label>
+                </div>
+
+                <!-- 地址信息 -->
+                <div class="address-info">
+                    <div class="address-user">
+                        <span class="receiver">{{ address.receiver }}</span>
+                        <span class="phone">{{ address.phone }}</span>
+                    </div>
+                    <div class="address-full">
+                        {{ address.province }} {{ address.city }} {{ address.district }} {{ address.detail }}
+                    </div>
+                </div>
+
+                <!-- 默认标签 → 放右上角，绝对不遮挡！ -->
+                {% if address.is_default %}
+                <div class="address-tag">默认</div>
+                {% endif %}
+            </div>
+
+            {% empty %}
+            <div class="no-address">
+                <p>暂无收货地址，请先添加地址</p>
+                <a href="{% url 'goods:address_add' %}" class="add-address-btn">添加收货地址</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if address_list %}
+        <a href="{% url 'goods:address_add' %}" class="add-new-address">+ 添加新地址</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+
+    <!-- 商品列表 -->
+    <table class="order-table">
+        <thead>
+            <tr>
+                <th>商品</th>
+                <th>单价</th>
+                <th>数量</th>
+                <th>小计</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cart, good in sumlist %}
+            <tr>
+                <td class="product-cell">
+                    {% if good.image %}
+                    <img src="{{ MEDIA_URL }}{{ good.image }}" class="product-thumbnail">
+                    {% endif %}
+                    <div class="product-info">
+                        <h4>{{ good.name }}</h4>
+                        <p>{{ good.introduce|truncatechars:30 }}</p>
+                    </div>
+                </td>
+                <td class="price-cell">¥{{ good.price }}</td>
+                <td class="quantity-cell">{{ cart.num }}</td>
+                <td class="subtotal-cell">¥{% widthratio good.price 1 cart.num %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="order-summary">
+        <div class="summary-row">
+            <span>商品总价</span>
+            <span>¥{{ total_price }}</span>
+        </div>
+        <div class="summary-row">
+            <span>运费</span>
+            <span class="free">免运费</span>
+        </div>
+        <div class="summary-row total">
+            <span>实付金额</span>
+            <span>¥{{ total_price }}</span>
+        </div>
+    </div>
+
+    <form action="{% url 'goods:confirm_checkout' %}" method="post" class="checkout-form">
+        {% csrf_token %}
+        <input type="hidden" name="selected_address_id" id="selected_address_id"
+               value="{% for a in address_list %}{% if a.is_default %}{{ a.id }}{% endif %}{% endfor %}">
+
+        <button type="submit" class="submit-btn" {% if not address_list %}disabled{% endif %}>
+            提交订单
+        </button>
+    </form>
+</div>
+
+<style>
+/* 整体容器 */
+.order-container {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.order-title {
+    font-size: 22px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    color: #333;
+}
+
+/* ====================== 收货地址样式（核心修复） ====================== */
+.address-section {
+    margin-bottom: 35px;
+}
+
+.address-title {
+    font-size: 17px;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.address-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.address-card {
+    position: relative;
+    width: 320px;
+    padding: 18px 20px;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #fff;
+    transition: 0.2s;
+}
+
+.address-card.active {
+    border-color: #165DFF;
+    background-color: #f8fbff;
+}
+
+/* 默认标签 → 放右上角，绝对不遮挡手机号 */
+.address-tag {
+    position: absolute;
+    top: 12px;
+    right: 15px;
+    background: #165DFF;
+    color: #fff;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.address-info {
+    margin-top: 5px;
+}
+
+.address-user {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+.address-user .receiver {
+    margin-right: 10px;
+}
+
+.address-full {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.address-radio {
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+}
+
+.address-radio input {
+    display: none;
+}
+
+.address-radio label {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    display: inline-block;
+    position: relative;
+}
+
+.address-card.active .address-radio label {
+    border-color: #165DFF;
+}
+
+.address-card.active .address-radio label::after {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background: #165DFF;
+    border-radius: 50%;
+    position: absolute;
+    top: 3px;
+    left: 3px;
+}
+
+.no-address {
+    width: 100%;
+    padding: 30px;
+    text-align: center;
+    border: 1px dashed #eee;
+    border-radius: 8px;
+    color: #999;
+}
+
+.add-address-btn, .add-new-address {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 15px;
+    background: #165DFF;
+    color: #fff;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.add-new-address {
+    margin-top: 15px;
+    background: #f5f7fa;
+    color: #165DFF;
+    border: 1px solid #165DFF;
+}
+
+/* ====================== 商品列表 ====================== */
+.order-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+}
+
+.order-table th,
+.order-table td {
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+}
+
+.order-table th {
+    background: #f9f9f9;
+    font-weight: 500;
+}
+
+.product-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+}
+
+.product-thumbnail {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.product-info h4 {
+    margin: 0;
+    font-size: 15px;
+    color: #333;
+}
+
+.product-info p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #999;
+}
+
+/* ====================== 订单金额 ====================== */
+.order-summary {
+    text-align: right;
+    margin-bottom: 25px;
+    font-size: 15px;
+}
+
+.summary-row {
+    margin-bottom: 8px;
+    color: #666;
+}
+
+.summary-row.total {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ff5722;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.free {
+    color: #07c160;
+}
+
+/* ====================== 提交按钮 ====================== */
+.submit-btn {
+    padding: 12px 35px;
+    background: #ff5722;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    float: right;
+}
+
+.submit-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.checkout-form {
+    overflow: hidden;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const cards = document.querySelectorAll('.address-card');
+    const hidden = document.getElementById('selected_address_id');
+
+    cards.forEach(card => {
+        card.addEventListener('click', () => {
+            cards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            hidden.value = card.dataset.addressId;
+        });
+    });
+});
+</script>
+{% endblock %}

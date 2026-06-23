@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}小鱼商城{% endblock %}</title>
+    {% load static %}
+    <style>
+        /* ========== 全局重置 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        /* ========== 页面容器 ========== */
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding-top: 70px;
+            min-height: 100vh;
+        }
+
+        /* ========== 主内容（自动撑满） ========== */
+        .main-content {
+            flex: 1 0 auto;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* ========== 导航栏 ========== */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            padding: 0 30px;
+            height: 70px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo img {
+            height: 36px;
+        }
+
+        .logo span {
+            background: linear-gradient(90deg, #f7971e, #ffd200);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .user-nav {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.85);
+            flex-wrap: wrap;
+        }
+
+        .user-nav .welcome {
+            color: rgba(255,255,255,0.6);
+            font-size: 13px;
+            margin-right: 4px;
+        }
+
+        .user-nav .username {
+            color: #ffd700;
+            font-weight: 600;
+            font-style: normal;
+        }
+
+        .user-nav .divider {
+            color: rgba(255,255,255,0.2);
+            margin: 0 4px;
+        }
+
+        .user-nav a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-size: 13px;
+        }
+
+        .user-nav a:hover {
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .nav-search {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255,255,255,0.12);
+            border-radius: 20px;
+            padding: 2px 4px 2px 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.3s;
+        }
+
+        .nav-search:hover,
+        .nav-search:focus-within {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,215,0,0.3);
+            box-shadow: 0 0 20px rgba(255,215,0,0.05);
+        }
+
+        .nav-search input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            padding: 6px 0;
+            font-size: 13px;
+            width: 140px;
+            outline: none;
+        }
+
+        .nav-search input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+
+        .nav-search button {
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            border: none;
+            color: #1a1a2e;
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .nav-search button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(255,215,0,0.3);
+        }
+
+        .user-nav .login-btn,
+        .user-nav .register-btn {
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .user-nav .login-btn {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .user-nav .login-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .user-nav .register-btn {
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            color: #1a1a2e;
+        }
+
+        .user-nav .register-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255,215,0,0.3);
+        }
+
+        /* ========== 页脚（固定在底部） ========== */
+        .footer {
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: rgba(255,255,255,0.6);
+            padding: 25px 20px 18px;
+            text-align: center;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        .footer .foot-links {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .footer .foot-links a {
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.3s;
+            padding: 4px 8px;
+        }
+
+        .footer .foot-links a:hover {
+            color: #ffd700;
+        }
+
+        .footer .foot-links .divider {
+            color: rgba(255,255,255,0.15);
+        }
+
+        .footer p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 15px;
+                height: 60px;
+            }
+            body {
+                padding-top: 60px;
+            }
+            .user-nav {
+                font-size: 12px;
+                gap: 2px;
+            }
+            .user-nav a {
+                padding: 4px 8px;
+                font-size: 12px;
+            }
+            .nav-search input {
+                width: 80px;
+                font-size: 12px;
+            }
+            .nav-search button {
+                padding: 4px 10px;
+                font-size: 12px;
+            }
+            .footer .foot-links a {
+                font-size: 12px;
+                padding: 2px 6px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {% block top %}
+    <header class="header">
+        <a href="{% url 'goods:index' %}" class="logo">
+            <img src="{% static 'images/logo.png' %}" alt="logo">
+            <span>小鱼商城</span>
+        </a>
+
+        {% if user.is_authenticated %}
+        <nav class="user-nav">
+            <span class="welcome">欢迎您：</span>
+            <em class="username">{{ user.profile.nickname|default:user.username }}</em>
+
+            <span class="divider">|</span>
+            <a href="{% url 'goods:index' %}">首页</a>
+
+            <span class="divider">|</span>
+            <a href="{% url 'auth_app:profile' %}">个人资料</a>
+
+            <span class="divider">|</span>
+            <form action="{% url 'goods:search' %}" method="get" class="nav-search">
+                <input type="text" name="keyword" placeholder="搜索商品..." required>
+                <button type="submit">搜索</button>
+            </form>
+
+            <span class="divider">|</span>
+            <a href="{% url 'auth_app:password_change' %}">修改密码</a>
+
+            <span class="divider">|</span>
+            <a href="{% url 'goods:address_list' %}">收货地址</a>
+
+            <span class="divider">|</span>
+            <a href="{% url 'goods:carts' %}">购物车</a>
+
+            <span class="divider">|</span>
+            <a href="{% url 'goods:orderinfo' %}">我的订单</a>
+
+            <span class="divider">|</span>
+            <a href="{% url 'auth_app:logout' %}" style="color:#ff6b6b;">退出</a>
+        </nav>
+        {% else %}
+        <nav class="user-nav">
+            <a href="{% url 'auth_app:login' %}" class="login-btn">登录</a>
+            <span class="divider">|</span>
+            <a href="{% url 'auth_app:register' %}" class="register-btn">注册</a>
+        </nav>
+        {% endif %}
+    </header>
+    {% endblock top %}
+
+    <!-- ========== 主内容 ========== -->
+    <main class="main-content">
+        {% block main %}{% endblock %}
+    </main>
+
+    <!-- ========== 页脚 ========== -->
+    {% block footer %}
+    <footer class="footer">
+        <div class="foot-links">
+            <a href="#">关于我们</a>
+            <span class="divider">|</span>
+            <a href="#">联系我们</a>
+            <span class="divider">|</span>
+            <a href="#">招聘人才</a>
+            <span class="divider">|</span>
+            <a href="#">友情链接</a>
+        </div>
+        <p>Copyright © 小鱼商城 All Rights Reserved</p>
+    </footer>
+    {% endblock %}
+
+    {% block script %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,478 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}小鱼商城 - {{ shangpin.name }}{% endblock %}
+
+{% block main %}
+<div class="product-detail-container">
+    <div class="product-main">
+        <div class="product-gallery">
+            <div class="main-image">
+                <img src="{{ MEDIA_URL }}/{{ shangpin.image }}" alt="{{ shangpin.name }}" class="product-image">
+            </div>
+        </div>
+
+        <div class="product-info">
+            <h1 class="product-title">{{ shangpin.name }}</h1>
+
+            <!-- ========== 收藏按钮（新增） ========== -->
+            <div style="margin:10px 0;">
+                <button id="fav-btn" onclick="toggleFavorite({{ shangpin.id }})" class="btn-fav" style="background:none; border:1px solid #ddd; padding:6px 16px; border-radius:4px; cursor:pointer;">
+                    {% if is_fav %}取消收藏{% else %}收藏{% endif %}
+                </button>
+                <span id="fav-count" style="margin-left:8px; color:#666;">（{{ favorite_count|default:0 }}人收藏）</span>
+            </div>
+            <!-- ========== 收藏按钮结束 ========== -->
+
+            <form action="{% url 'goods:addcart' shangpin.id %}" method="post" class="add-cart-form">
+                {% csrf_token %}
+                <div class="product-meta">
+                    <div class="meta-row">
+                        <span class="meta-label">价格：</span>
+                        <span class="price">¥{{ shangpin.price }}</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">说明：</span>
+                        <p class="meta-content">{{ shangpin.caption }}</p>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">规格：</span>
+                        <div class="spec-options">
+                            {% for guige in guiges %}
+                            <label class="spec-option">
+                                <input type="radio" name="guige_id" value="{{ guige.id }}" {% if forloop.first %}checked{% endif %}>
+                                <span class="spec-name">{{ guige.name }}</span>
+                            </label>
+                            {% empty %}
+                            <span>默认规格</span>
+                            <input type="hidden" name="guige_id" value="0">
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">数量：</span>
+                        <div class="quantity-control">
+                            <button type="button" class="quantity-btn minus">-</button>
+                            <input type="number" name="quantity" value="1" min="1" class="quantity-input">
+                            <button type="button" class="quantity-btn plus">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button type="submit" class="btn add-to-cart">加入购物车</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================== 选项卡区域 ====================== -->
+    <div class="tab-container">
+        <div class="tab-buttons">
+            <button class="tab-btn active" data-tab="detail">商品详情</button>
+            <div class="tab-review-wrap">
+                <button class="tab-btn" data-tab="review">商品评价</button>
+            </div>
+        </div>
+
+        <!-- 商品详情 -->
+        <div class="tab-content active" id="tab-detail">
+            <div class="detail-content">
+                {% if detail_images %}
+                    {% for img in detail_images %}
+                        <img src="{{ MEDIA_URL }}/{{ img.image }}" class="detail-image">
+                    {% endfor %}
+                {% else %}
+                    <img src="{{ MEDIA_URL }}/{{ shangpin.image }}" class="detail-image">
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 商品评价 -->
+        <div class="tab-content" id="tab-review">
+
+            <!-- 去评价按钮：只有 已购买 + 未评价 才显示 -->
+            {% if user_has_purchased and not user_has_reviewed %}
+            <div class="review-action">
+                <a href="{% url 'goods:add_review' product_id=shangpin.id %}" class="btn btn-review">发表评价</a>
+            </div>
+            {% endif %}
+
+            <!-- 未购买时显示提示 -->
+            {% if not user_has_purchased %}
+            <div class="review-tip">
+                购买该商品后即可评价
+            </div>
+            {% endif %}
+
+            <div class="review-stats">
+                <div class="average-rating">
+                    <span class="label">平均评分：</span>
+                    <span class="stars">
+                        {% for i in "12345" %}
+                            {% if i|add:0 <= average_rating|floatformat:0 %}★{% else %}☆{% endif %}
+                        {% endfor %}
+                    </span>
+                    <span class="value">{{ average_rating|floatformat:1 }}</span>
+                </div>
+                <div class="review-count">共 {{ review_count }} 条评价</div>
+            </div>
+
+            <div class="review-list">
+                {% for review in reviews %}
+                <div class="review-item">
+                    <div class="review-header">
+                        <span class="reviewer">
+                            {% if review.is_anonymous %}匿名用户{% else %}{{ review.user.username }}{% endif %}
+                        </span>
+                        <span class="review-date">{{ review.created_at|date:"Y-m-d H:i" }}</span>
+                        <span class="review-rating">
+                            {% for i in "12345" %}
+                                {% if i|add:0 <= review.rating %}★{% else %}☆{% endif %}
+                            {% endfor %}
+                        </span>
+                    </div>
+                    <div class="review-content">{{ review.content|linebreaks }}</div>
+                    {% if review.user == request.user %}
+                    <div class="review-actions">
+                        <a href="{% url 'goods:add_review' shangpin.id %}">编辑</a>
+                        <a href="{% url 'goods:delete_review' review.id %}" onclick="return confirm('确定删除？')">删除</a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="no-reviews">暂无评价</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // 数量加减
+    const minus = document.querySelector('.quantity-btn.minus');
+    const plus = document.querySelector('.quantity-btn.plus');
+    const numInput = document.querySelector('.quantity-input');
+    minus.onclick = () => { let v = +numInput.value; if (v > 1) numInput.value = v - 1; };
+    plus.onclick = () => { numInput.value = +numInput.value + 1; };
+
+    // 选项卡切换
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        });
+    });
+    // 加入购物车（AJAX 弹框提示）
+    const form = document.querySelector('.add-cart-form');
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('加入购物车成功！');
+            } else {
+                alert('加入失败：' + data.message);
+            }
+        })
+        .catch(err => {
+            alert('网络异常，请重试');
+        });
+    });
+});
+
+// ========== 收藏功能 AJAX（新增） ==========
+function toggleFavorite(productId) {
+    fetch(`/favorite/${productId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('fav-btn').textContent = data.is_fav ? '取消收藏' : '收藏';
+        document.getElementById('fav-count').textContent = '（' + data.count + '人收藏）';
+    })
+    .catch(err => {
+        console.error('收藏操作失败：', err);
+        alert('操作失败，请重试');
+    });
+}
+// ========== 收藏功能结束 ==========
+</script>
+
+<style>
+/* 你的原有样式保持不变（此处省略，实际使用时保留全部样式） */
+.product-detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 20px;
+    background: #fff;
+}
+.product-main {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+.product-gallery {
+    flex: 1;
+    min-width: 300px;
+}
+.main-image {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #eee;
+}
+.product-image {
+    width: 100%;
+    display: block;
+}
+.product-info {
+    flex: 1;
+    min-width: 300px;
+}
+.product-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+.meta-row {
+    display: flex;
+    margin-bottom: 20px;
+    align-items: center;
+}
+.meta-label {
+    width: 70px;
+    color: #666;
+}
+.price {
+    font-size: 22px;
+    color: #ff5722;
+    font-weight: bold;
+}
+.spec-options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.spec-option {
+    position: relative;
+}
+.spec-option input {
+    position: absolute;
+    opacity: 0;
+}
+.spec-name {
+    padding: 8px 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.spec-option input:checked + .spec-name {
+    border-color: #1e88e5;
+    background: #e8f4ff;
+    color: #1e88e5;
+}
+.quantity-control {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.quantity-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #f5f5f5;
+    cursor: pointer;
+}
+.quantity-input {
+    width: 50px;
+    height: 32px;
+    text-align: center;
+    border: none;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+}
+.action-buttons {
+    margin-top: 20px;
+}
+.btn {
+    width: 100%;
+    height: 44px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.add-to-cart {
+    background: #1e88e5;
+    color: #fff;
+}
+
+.tab-container {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+.tab-buttons {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.tab-review-wrap {
+    display: flex;
+    align-items: center;
+    gap:15px;
+}
+.tab-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    color: #666;
+}
+.tab-btn.active {
+    color: #1e88e5;
+    font-weight: bold;
+}
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #1e88e5;
+    border-radius: 3px;
+}
+.review-top-btn{
+    padding:6px 12px;
+    background:#ff9800;
+    color:#fff;
+    text-decoration:none;
+    border-radius:4px;
+    font-size:14px;
+}
+.tab-content {
+    display: none;
+}
+.tab-content.active {
+    display: block;
+}
+
+.detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.detail-image {
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    border-radius: 6px;
+}
+
+.review-action {
+    margin-bottom: 15px;
+}
+.btn-review {
+    background: #ff9800;
+    color: #fff;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 4px;
+    display: inline-block;
+    font-size: 16px;
+}
+.review-tip {
+    padding: 10px 15px;
+    color: #666;
+    background: #f7f7f7;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+.review-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px 15px;
+    background: #f9f9f9;
+    border-radius: 6px;
+}
+.average-rating {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.stars {
+    color: #ffc107;
+    font-size: 16px;
+}
+.review-count {
+    color: #666;
+}
+.review-list {
+    margin-top: 10px;
+}
+.review-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    background: #fafafa;
+    border-radius: 6px;
+}
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+.reviewer {
+    font-weight: bold;
+}
+.review-date {
+    color: #999;
+}
+.review-rating {
+    color: #ffc107;
+}
+.review-content {
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 10px;
+}
+.review-actions {
+    text-align: right;
+}
+.review-actions a {
+    margin-left: 10px;
+    color: #1e88e5;
+    text-decoration: none;
+}
+.no-reviews {
+    text-align: center;
+    padding: 30px;
+    color: #999;
+}
+</style>
+{% endblock %}

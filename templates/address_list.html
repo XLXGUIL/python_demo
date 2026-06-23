@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}收货地址 - 小鱼商城{% endblock %}
+
+{% block main %}
+<div style="max-width:900px; margin:30px auto; padding:0 20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+        <h2 style="font-size:24px; color:#1a1a2e;">我的收货地址</h2>
+        <a href="{% url 'goods:address_add' %}"
+           style="background:linear-gradient(135deg, #f7971e, #ffd200); color:#1a1a2e; padding:10px 24px; border-radius:10px; text-decoration:none; font-weight:600; font-size:14px; transition:all 0.3s;"
+           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 25px rgba(247,151,30,0.3)'"
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+            + 添加新地址
+        </a>
+    </div>
+
+    {% if addresses %}
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        {% for addr in addresses %}
+        <div style="background:#fff; border-radius:12px; padding:20px 24px; border:2px solid {% if addr.is_default %}#ffd700{% else %}#e8ecf1{% endif %}; position:relative; transition:all 0.3s; box-shadow:0 2px 8px rgba(0,0,0,0.04);"
+             onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)'"
+             onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)'">
+
+            {% if addr.is_default %}
+            <span style="position:absolute; top:12px; right:12px; background:linear-gradient(135deg, #ffd700, #f7971e); color:#1a1a2e; font-size:11px; padding:2px 12px; border-radius:12px; font-weight:700;">默认</span>
+            {% endif %}
+
+            <p style="margin:0 0 4px; font-size:16px; font-weight:600; color:#1a1a2e;">
+                {{ addr.receiver }}
+            </p>
+            <p style="margin:0 0 4px; color:#888; font-size:14px;">
+                {{ addr.phone }}
+            </p>
+            <p style="margin:0 0 12px; color:#666; font-size:14px; line-height:1.5;">
+                {{ addr.province }} {{ addr.city }} {{ addr.district }} {{ addr.detail }}
+            </p>
+
+            <div style="display:flex; gap:12px; font-size:13px;">
+                {% if not addr.is_default %}
+                <a href="{% url 'goods:set_default' addr.id %}"
+                   style="color:#f7971e; text-decoration:none; font-weight:500; transition:color 0.3s;"
+                   onmouseover="this.style.color='#e67e00'"
+                   onmouseout="this.style.color='#f7971e'">
+                    设为默认
+                </a>
+                <span style="color:#ddd;">|</span>
+                {% endif %}
+                <a href="{% url 'goods:address_delete' addr.id %}"
+                   onclick="return confirm('确认删除此地址？')"
+                   style="color:#ff6b6b; text-decoration:none; font-weight:500; transition:color 0.3s;"
+                   onmouseover="this.style.color='#e03131'"
+                   onmouseout="this.style.color='#ff6b6b'">
+                    删除
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center; padding:60px 20px; background:#fff; border-radius:12px; border:2px dashed #e8ecf1;">
+        <p style="font-size:16px; color:#999;">暂无收货地址</p>
+        <a href="{% url 'goods:address_add' %}" style="display:inline-block; margin-top:12px; color:#f7971e; text-decoration:none; font-weight:500;">立即添加 →</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

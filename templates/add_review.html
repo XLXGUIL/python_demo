@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}评价商品 - 小鱼商城{% endblock %}
+
+{% block main %}
+<div class="review-form-container">
+    <h2 class="review-title">评价 {{ product.name }}</h2>
+
+    <div class="product-info">
+        <img src="{{ MEDIA_URL }}/{{ product.image }}" alt="{{ product.name }}" class="product-image">
+        <h3>{{ product.name }}</h3>
+    </div>
+
+    <form method="post" class="review-form">
+        {% csrf_token %}
+
+        <div class="form-group rating-group">
+            <label>评分：</label>
+            <div class="star-rating">
+                <input type="radio" id="star5" name="rating" value="5">
+                <label for="star5" title="5星">★</label>
+
+                <input type="radio" id="star4" name="rating" value="4">
+                <label for="star4" title="4星">★</label>
+
+                <input type="radio" id="star3" name="rating" value="3">
+                <label for="star3" title="3星">★</label>
+
+                <input type="radio" id="star2" name="rating" value="2">
+                <label for="star2" title="2星">★</label>
+
+                <input type="radio" id="star1" name="rating" value="1">
+                <label for="star1" title="1星">★</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            {{ form.content.label_tag }}
+            {{ form.content }}
+            {% if form.content.errors %}
+            <div class="error">{{ form.content.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group anonymous-group">
+            {{ form.is_anonymous }}
+            {{ form.is_anonymous.label_tag }}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="submit-btn">提交评价</button>
+            <a href="{% url 'goods:detail' product.id %}" class="cancel-btn">取消</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.review-form-container {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 25px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.review-title {
+    font-size: 22px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+.product-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f5f5f5;
+}
+.product-info .product-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 20px;
+}
+.product-info h3 {
+    font-size: 18px;
+    margin: 0;
+}
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+    font-size: 36px;
+    gap: 8px;
+}
+.star-rating input {
+    display: none;
+}
+.star-rating label {
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.star-rating label:hover,
+.star-rating label:hover ~ label,
+.star-rating input:checked ~ label {
+    color: #ffc107 !important;
+}
+
+.review-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-height: 120px;
+}
+.anonymous-group {
+    display: flex;
+    align-items: center;
+}
+.anonymous-group input {
+    margin-right: 10px;
+}
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 30px;
+}
+.submit-btn {
+    padding: 10px 25px;
+    background: #1e88e5;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.cancel-btn {
+    padding: 10px 25px;
+    background: #f5f5f5;
+    color: #333;
+    border-radius: 4px;
+    text-decoration: none;
+}
+.error {
+    color: #f44336;
+    font-size: 14px;
+}
+</style>
+{% endblock %}

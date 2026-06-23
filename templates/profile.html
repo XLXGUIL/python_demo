@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人资料管理 - 小鱼商城</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+            padding-top: 70px;
+            min-height: 100vh;
+        }
+
+        .profile-container {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .profile-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 40px 35px;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.08);
+        }
+
+        /* 标题区域 */
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .profile-header .icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .profile-header h2 {
+            font-size: 24px;
+            color: #1a1a2e;
+            margin: 0;
+        }
+
+        .profile-header p {
+            color: #999;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        /* 头像区域 */
+        .avatar-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #f0f2f5;
+        }
+
+        .avatar-wrapper {
+            display: inline-block;
+            position: relative;
+        }
+
+        .avatar-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            transition: all 0.3s;
+        }
+
+        .avatar-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 30px rgba(247,151,30,0.25);
+        }
+
+        /* 表单组 */
+        .form-group-custom {
+            margin-bottom: 22px;
+        }
+
+        .form-group-custom label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .form-group-custom label .required {
+            color: #ff6b6b;
+            margin-left: 2px;
+        }
+
+        .form-group-custom .help-text {
+            font-size: 12px;
+            color: #bbb;
+            margin-top: 4px;
+        }
+
+        .form-group-custom input[type="text"],
+        .form-group-custom input[type="email"],
+        .form-group-custom input[type="tel"],
+        .form-group-custom select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e8ecf1;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+            outline: none;
+            background: #fafbfc;
+            color: #333;
+        }
+
+        .form-group-custom input:focus,
+        .form-group-custom select:focus {
+            border-color: #f7971e;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(247,151,30,0.08);
+        }
+
+        .form-group-custom input:disabled {
+            background: #f5f5f5;
+            color: #999;
+        }
+
+        /* 文件上传 */
+        .file-upload-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-btn {
+            display: inline-block;
+            padding: 10px 24px;
+            background: #f0f2f5;
+            color: #555;
+            border: 2px dashed #d0d5dd;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            width: 100%;
+        }
+
+        .file-upload-btn:hover {
+            border-color: #f7971e;
+            background: #fef9f0;
+            color: #f7971e;
+        }
+
+        .file-upload-btn .file-name {
+            color: #999;
+            font-size: 13px;
+        }
+
+        /* 按钮 */
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(247,151,30,0.35);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 12px;
+            background: #f0f2f5;
+            color: #555;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+            margin-top: 12px;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e8ed;
+            text-decoration: none;
+            color: #333;
+        }
+
+        /* 消息提示 */
+        .alert-custom {
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-custom.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .alert-custom.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .alert-custom .close-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: inherit;
+            opacity: 0.6;
+        }
+
+        .alert-custom .close-btn:hover {
+            opacity: 1;
+        }
+
+        /* 性别单选框美化 */
+        .gender-options {
+            display: flex;
+            gap: 16px;
+            padding-top: 4px;
+        }
+
+        .gender-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 400;
+            cursor: pointer;
+            padding: 8px 16px;
+            border: 2px solid #e8ecf1;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .gender-options label:hover {
+            border-color: #f7971e;
+        }
+
+        .gender-options input[type="radio"] {
+            display: none;
+        }
+
+        .gender-options input[type="radio"]:checked + label {
+            border-color: #f7971e;
+            background: #fef9f0;
+            color: #f7971e;
+        }
+
+        .gender-options input[type="radio"]:checked + label .gender-emoji {
+            color: #f7971e;
+        }
+
+        .gender-options .gender-emoji {
+            font-size: 18px;
+        }
+
+        @media (max-width: 576px) {
+            .profile-card {
+                padding: 25px 20px;
+            }
+            .gender-options {
+                flex-wrap: wrap;
+            }
+            .gender-options label {
+                flex: 1;
+                justify-content: center;
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="profile-container">
+    <div class="profile-card">
+
+        <!-- 标题 -->
+        <div class="profile-header">
+            <div class="icon">👤</div>
+            <h2>个人资料管理</h2>
+            <p>管理您的个人信息</p>
+        </div>
+
+        <!-- 消息提示 -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert-custom {% if message.tags == 'success' %}success{% else %}error{% endif %}">
+                    <span>{% if message.tags == 'success' %}✅{% else %}⚠️{% endif %}</span>
+                    <span>{{ message }}</span>
+                    <button class="close-btn" onclick="this.parentElement.style.display='none'">✕</button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- 头像 -->
+        <div class="avatar-section">
+            <div class="avatar-wrapper">
+                <img src="{{ profile.avatar.url }}" alt="用户头像" class="avatar-image">
+            </div>
+        </div>
+
+        <!-- 表单 -->
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- 昵称 -->
+            <div class="form-group-custom">
+                <label for="{{ form.nickname.id_for_label }}">昵称</label>
+                {{ form.nickname }}
+                <div class="help-text">不超过20字，可选填</div>
+                {% if form.nickname.errors %}
+                    <p style="color:#ff6b6b; font-size:13px; margin-top:4px;">{{ form.nickname.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- 头像上传 -->
+            <div class="form-group-custom">
+                <label>更换头像</label>
+                <div class="file-upload-wrapper">
+                    <div class="file-upload-btn">
+                        📁 选择文件 <span class="file-name" id="file-name">未选择文件</span>
+                    </div>
+                    {{ form.avatar }}
+                </div>
+                <div class="help-text">支持jpg、png格式，建议尺寸1:1</div>
+                {% if form.avatar.errors %}
+                    <p style="color:#ff6b6b; font-size:13px; margin-top:4px;">{{ form.avatar.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- 手机号 -->
+            <div class="form-group-custom">
+                <label for="{{ form.phone.id_for_label }}">手机号</label>
+                {{ form.phone }}
+                <div class="help-text">11位手机号，可选填</div>
+                {% if form.phone.errors %}
+                    <p style="color:#ff6b6b; font-size:13px; margin-top:4px;">{{ form.phone.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- 邮箱 -->
+            <div class="form-group-custom">
+                <label for="{{ form.email.id_for_label }}">邮箱</label>
+                {{ form.email }}
+                <div class="help-text">可选填，用于密码找回</div>
+                {% if form.email.errors %}
+                    <p style="color:#ff6b6b; font-size:13px; margin-top:4px;">{{ form.email.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- 性别 -->
+            <div class="form-group-custom">
+                <label>性别</label>
+                <div class="gender-options">
+                    {% for choice in form.gender.field.choices %}
+                        <input type="radio" name="gender" id="gender_{{ choice.0 }}" value="{{ choice.0 }}"
+                               {% if form.gender.value == choice.0 %}checked{% endif %}>
+                        <label for="gender_{{ choice.0 }}">
+                            <span class="gender-emoji">
+                                {% if choice.0 == 'M' %}👨{% elif choice.0 == 'F' %}👩{% else %}❓{% endif %}
+                            </span>
+                            {{ choice.1 }}
+                        </label>
+                    {% endfor %}
+                </div>
+                {% if form.gender.errors %}
+                    <p style="color:#ff6b6b; font-size:13px; margin-top:4px;">{{ form.gender.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- 按钮 -->
+            <button type="submit" class="btn-submit">💾 保存修改</button>
+            <a href="{% url 'goods:index' %}" class="btn-secondary">🏠 返回首页</a>
+        </form>
+
+    </div>
+</div>
+
+<script>
+    // 文件上传显示文件名
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.querySelector('input[type="file"]');
+        const fileNameSpan = document.getElementById('file-name');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    fileNameSpan.textContent = this.files[0].name;
+                } else {
+                    fileNameSpan.textContent = '未选择文件';
+                }
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

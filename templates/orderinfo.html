@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block main %}
+    <style>
+        /* 订单列表容器样式 */
+        .order-container {
+            width: 80%;
+            margin: 40px auto;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        /* 订单表格样式 */
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* 表头样式 */
+        .order-table thead tr {
+            background-color: #409eff;
+            color: #fff;
+        }
+
+        .order-table th {
+            padding: 16px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* 表体样式 */
+        .order-table tbody tr {
+            border-bottom: 1px solid #e6e6e6;
+            transition: background-color 0.2s ease;
+        }
+
+        /* 奇偶行区分 */
+        .order-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        /* 行hover效果 */
+        .order-table tbody tr:hover {
+            background-color: #e8f4fd;
+        }
+
+        .order-table td {
+            padding: 16px;
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* 空数据提示 */
+        .empty-tip {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* 价格样式 */
+        .price-text {
+            color: #e6a23c;
+            font-weight: 500;
+        }
+
+        /* 状态样式（可根据实际状态值扩展） */
+        .state-text {
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .state-pending {
+            background-color: #fff7e6;
+            color: #e6a23c;
+        }
+
+        .state-success {
+            background-color: #f0f9ff;
+            color: #67c23a;
+        }
+
+        .state-cancel {
+            background-color: #fef0f0;
+            color: #f56c6c;
+        }
+    </style>
+
+    <div class="order-container">
+        <table class="order-table">
+            <thead>
+                <tr>
+                    <th>订单编号</th>
+                    <th>订单价格</th>
+                    <th>购买时间</th>
+                    <th>订单状态</th>
+                    <th>操作</th>   <!-- ✅ 新增 -->
+                </tr>
+            </thead>
+            <tbody>
+                {% if orderInfos %}
+                    {% for order in orderInfos %}
+                        <tr>
+                            <td>{{ order.id }}</td>
+                            <td class="price-text">￥{{ order.price }}</td>
+                            <td>{{ order.create_time|date:"Y-m-d H:i:s" }}</td>
+                            <td>
+                                {% if order.state == "待支付" %}
+                                    <span class="state-text state-pending">{{ order.state }}</span>
+                                {% elif order.state == "已完成" %}
+                                    <span class="state-text state-success">{{ order.state }}</span>
+                                {% elif order.state == "已取消" %}
+                                    <span class="state-text state-cancel">{{ order.state }}</span>
+                                {% else %}
+                                    <span class="state-text">{{ order.state }}</span>
+                                {% endif %}
+                            </td>
+                            <!-- ✅ 新增操作列 -->
+                            <td>
+                                {% if order.state == "待支付" %}
+                                    <a href="{% url 'goods:pay_order' order.id %}" class="btn-pay" onclick="return confirm('确定模拟支付吗？')" style="color:#fff; background:#ff9800; padding:4px 12px; border-radius:4px; text-decoration:none; display:inline-block; font-size:13px;">模拟支付</a>
+                                {% elif order.state == "已支付" or order.state == "发货中" %}
+                                    <a href="{% url 'goods:confirm_receipt' order.id %}" class="btn-confirm" onclick="return confirm('确认已收到货吗？')" style="color:#fff; background:#4caf50; padding:4px 12px; border-radius:4px; text-decoration:none; display:inline-block; font-size:13px;">确认收货</a>
+                                {% else %}
+                                    <span style="color:#999; font-size:13px;">-</span>
+                                {% endif %}
+                            </td>
+                            <!-- ✅ 操作列结束 -->
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="empty-tip">暂无订单数据</td>   <!-- ✅ colspan 从4改为5 -->
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+{% endblock main %}

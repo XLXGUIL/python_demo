@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block main %}
+<div class="cart-container">
+    <h2 class="cart-title">我的购物车</h2>
+
+    {% if sumlist %}
+    <!-- 表单默认action保留批量删除，结算时动态修改为checkout -->
+    <form id="cart-form" action="{% url 'goods:batch_delete' %}" method="post">
+        {% csrf_token %}
+        <!-- 批量删除按钮 -->
+        <div style="margin-bottom:15px; text-align:right;">
+            <button type="submit" class="batch-delete-btn" onclick="return confirm('确定要删除选中的商品吗？')">
+                批量删除选中商品
+            </button>
+        </div>
+
+        <table class="cart-table">
+            <colgroup>
+                <col width="60px">
+                <col width="auto">
+                <col width="auto">
+                <col width="140px">
+                <col width="auto">
+                <col width="auto">
+                <col width="auto">
+                <col width="auto">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="select-all"></th>
+                    <th>商品</th>
+                    <th>说明</th>
+                    <th>规格</th>
+                    <th>单价</th>
+                    <th>数量</th>
+                    <th>小计</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sumlist %}
+                <tr class="cart-item" data-price="{{ item.good.price }}" data-quantity="{{ item.cart.num }}" data-id="{{ item.cart.id }}">
+                    <td><input type="checkbox" name="cart_items" value="{{ item.cart.id }}" class="item-checkbox"></td>
+                    <td class="product-cell">
+                        <img src="{{ MEDIA_URL }}/{{ item.good.image }}" class="product-thumbnail">
+                        <span>{{ item.good.name }}</span>
+                    </td>
+                    <td>{{ item.good.caption }}</td>
+                    <td>{{ item.guige_name|default:"默认" }}</td>
+                    <td class="item-price">¥{{ item.good.price }}</td>
+                    <td>
+                        <div class="quantity-control">
+                            <button type="button" class="qty-btn minus">-</button>
+                            <input type="text" value="{{ item.cart.num }}" class="qty-input" readonly>
+                            <button type="button" class="qty-btn plus">+</button>
+                        </div>
+                    </td>
+                    <td class="item-subtotal">¥{% widthratio item.good.price 1 item.cart.num %}</td>
+                    <td><a href="{% url 'goods:delt' item.cart.id %}" class="delete-btn">删除</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="cart-actions">
+            <!-- 修改去结算按钮逻辑：直接提交到checkout路由，增加选中验证 -->
+            <button type="submit" class="checkout-btn" id="checkout-btn">去结算</button>
+            <div class="cart-total">
+                总计: <span class="total-amount">¥0.00</span>
+            </div>
+        </div>
+    </form>
+    {% else %}
+    <div class="empty-cart">
+        <img src="{% static 'images/empty-cart.png' %}" alt="购物车为空">
+        <p>您的购物车还是空的，快去选购商品吧~</p>
+        <a href="{% url 'goods:index' %}" class="continue-shopping">继续购物</a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+/* 原有样式保持不变，新增批量删除按钮样式 */
+.cart-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.cart-title {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.cart-table th,
+.cart-table td {
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-table th {
+    background-color: #f5f5f5;
+    font-weight: 500;
+}
+
+.product-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+
+.product-thumbnail {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.quantity-control {
+    display: inline-flex;
+    align-items: center;
+}
+
+.qty-btn {
+    width: 30px;
+    height: 30px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    cursor: pointer;
+}
+
+.qty-input {
+    width: 50px;
+    height: 30px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-left: none;
+    border-right: none;
+}
+
+.delete-btn {
+    color: #f44336;
+    text-decoration: none;
+}
+
+.cart-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* 新增批量删除按钮样式 */
+.batch-delete-btn {
+    padding: 10px 30px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.checkout-btn {
+    padding: 10px 30px;
+    background-color: #ff5722;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.cart-total {
+    font-size: 18px;
+}
+
+.total-amount {
+    color: #ff5722;
+    font-weight: bold;
+    font-size: 24px;
+}
+
+.empty-cart {
+    text-align: center;
+    padding: 50px 0;
+}
+
+.empty-cart img {
+    width: 200px;
+    margin-bottom: 20px;
+}
+
+.continue-shopping {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #1e88e5;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+}
+.batch-delete-btn {
+    padding: 8px 16px;
+    background-color: #f44336;
+    color: white;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const selectAllCheckbox = document.getElementById('select-all');
+    const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+    const totalAmountElement = document.querySelector('.total-amount');
+    const quantityButtons = document.querySelectorAll('.qty-btn');
+    const checkoutBtn = document.getElementById('checkout-btn');
+    const cartForm = document.getElementById('cart-form');
+
+    // 全选功能
+    selectAllCheckbox.addEventListener('change', function () {
+        itemCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        calculateTotal();
+    });
+
+    // 单个选择
+    itemCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            const allChecked = Array.from(itemCheckboxes).every(cb => cb.checked);
+            selectAllCheckbox.checked = allChecked;
+            calculateTotal();
+        });
+    });
+
+    // 数量加减
+    quantityButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const input = this.parentElement.querySelector('.qty-input');
+            const row = this.closest('.cart-item');
+            const price = parseFloat(row.dataset.price);
+            let quantity = parseInt(input.value);
+
+            if (this.classList.contains('plus')) {
+                quantity++;
+            } else if (this.classList.contains('minus') && quantity > 1) {
+                quantity--;
+            }
+
+            input.value = quantity;
+            row.dataset.quantity = quantity;
+            const subtotalEl = row.querySelector('.item-subtotal');
+            subtotalEl.textContent = '¥' + (price * quantity).toFixed(2);
+            calculateTotal();
+        });
+    });
+
+    // 计算选中商品总价
+    function calculateTotal() {
+        let total = 0;
+        itemCheckboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                const row = checkbox.closest('.cart-item');
+                const price = parseFloat(row.dataset.price);
+                const qty = parseInt(row.dataset.quantity);
+                total += price * qty;
+            }
+        });
+        totalAmountElement.textContent = '¥' + total.toFixed(2);
+    }
+
+    // 结算按钮点击事件：验证选中状态 + 切换表单action到checkout
+    checkoutBtn.addEventListener('click', function (e) {
+        // 验证至少选中一个商品
+        const checkedItems = Array.from(itemCheckboxes).some(cb => cb.checked);
+        if (!checkedItems) {
+            e.preventDefault(); // 阻止表单提交
+            alert('请至少选择一个商品进行结算！');
+            return;
+        }
+
+        // 切换表单action到checkout路由并提交
+        cartForm.action = "{% url 'goods:checkout' %}";
+    });
+
+    calculateTotal();
+});
+</script>
+{% endblock %}
